@@ -410,24 +410,35 @@ function deleteFromTable {
 	fi
 }
 
+
 function updateTable {
 	read -p "Table name: " TableName 
 	read -p "Row ID Value: " idval
-	read -p "Column name: " colName
+	#read -p "Column name: " colName
 	
+	if ! numType $idval;
+				then
+		 
+					echo "Syntax error, invalid input type";
+					#read -p "id number: " idval;
+					return;
+				fi
+	read -p "Column name: " colName			
 	if validate $TableName && validate $idval && validate $colName;
 	then        
 		if [ -f $TableName ]
 		then
+		echo "hhiiii $idval"
 			while [[ true ]]
 			do
-				if numType $idval;
+			if numType $idval;
 				then
 					break;
 				else 
 					echo "Syntax error, invalid input type";
-					read -p "id number: " idval;
-				fi
+					#read -p "id number: " idval;
+					return;
+				fi	
 			done
 			while [[ true ]]
 			do
