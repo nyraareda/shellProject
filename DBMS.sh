@@ -24,53 +24,43 @@ function mainMenu {
 }
 
 function validate() {
-    local id="$1"
-    if [[ -z "$id" || "$id" =~ [[:space:]] ]]; then
-        return 1
-    else
-        return 0
-    fi
-}
-
-function validateCreate() {
-  local param="$1"
-    
-    # Check if the parameter starts with a character
-    if [[ ! "$param" =~ ^[a-zA-Z] ]]; then
-        return 1
-    fi
-    
-    # Check if the parameter contains any spaces
-    if [[ "$param" =~ [[:space:]] ]]; then
-        return 1
-    fi
-    
-    # If all conditions are met, return 0 (true)
-    return 0
+	if [ -z $1 ]; then
+		return 1
+	else 
+   		return 0
+  	fi
 }
 
 function CreateDatabase {
 	echo " "
-	read -p "Enter Database name to create: " dbName;
+	read -p "Database name: " dbName;
 
-	if validateCreate "$dbName" && ! [[ "$dbName" =~ [[:space:]] ]]; then
-		if [ -d "$dbName" ]; then
+	if validate $dbName;
+	then        	
+		if [ -d $dbName ]
+		then
 			echo "Database name already exists";
 			echo " "
 			mainMenu
 		else 
-			mkdir "$dbName"
-			echo "Database $dbName created successfully";
-			echo " "
-			mainMenu
+			 if [[ $dbName =~ ^[a-zA-Z] ]]
+			 then
+				mkdir $dbName
+			 	echo "Database $dbName created successfully";
+			     	echo " "
+			 	mainMenu
+			 else
+				echo "Syntax error, it contains an illegal character"
+			     	echo " "
+			 	mainMenu
+			 fi
 		fi
 	else
-		echo "Syntax error: Database name cannot contain spaces or consist only of numbers";
-		echo " "
-		mainMenu
-	fi
+                echo "Syntax error, not valid input";
+                echo " "
+                mainMenu
+        fi
 }
-
 
 function ConnetDatabase {
 	echo " "
@@ -161,91 +151,104 @@ function varType() {
 }
 
 function createTable {
-	read -p "Enter table name you want to create : " TableName
+	read -p "Table name: " TableName
 	
-	if validate "$TableName" && ! [[ "$TableName" =~ [[:space:]] ]]; then
-		if [ -f "$TableName" ]; then
+	if validate $TableName;
+	then        
+		if [ -f $TableName ]
+		then
 			echo "Table name already exists";
 			echo " "
 			tableMenu
 		else
-			if varType "$TableName"; then
+			if varType $TableName;
+			then
 				echo ""
 			else
-				echo "Syntax error: Table name contains an illegal character"
-				echo " "
-				tableMenu
+				echo "Syntax error, it contains an illegal character"
+			     	echo " "
+			 	tableMenu
 			fi
 
-			read -p "Enter number of columns: " col
-			if numType "$col"; then
+			read -p "Number of columns: " col
+			if numType $col;
+			then
 				counter=1
 				seperator=":"
 				rowSep="\n"
 				pKey=""
 			 	columns="Field"$seperator"Type"$seperator"Key"
-				while [ $counter -le $col ]; do
+				while [ $counter -le $col ]
+			 	do
 					read -p "Enter column $counter name: " colName
-			 		if varType "$colName"; then
+			 		if varType $colName
+					then
 						echo "Choose the type of column $colName: "
-						select t in "Number" "Varchar2"; do
+						select t in "Number" "Varchar2"
+						do
 							case $REPLY in
 								1) colType="Number"; break ;;
-								2) colType="Varchar2"; break ;;
-								*) echo " "; tableMenu; break ;;
+								2) colType="Varchar2"; break;;
+								*) echo " "; tableMenu; break;;
 							esac
 						done
 
-						if [[ "$pKey" == "" ]]; then
+						if [[ $pKey == "" ]]
+						then
 							echo "Make it PK?"
-							select p in "Yes" "No"; do
+							select p in "Yes" "No"
+							do
 								case $REPLY in
-									1) pKey="PK"; columns+=$rowSep$colName$seperator$colType$seperator$pKey; break ;;
-									2) columns+=$rowSep$colName$seperator$colType$seperator; break ;;
-									*) echo " "; break ;;
+							        1)pKey="PK";columns+=$rowSep$colName$seperator$colType$seperator$pKey;
+									break;;
+								2) columns+=$rowSep$colName$seperator$colType$seperator;
+									break;;
+								*) echo " "; 
+									break;;
 								esac
 							done
 						else
-							columns+=$rowSep$colName$seperator$colType$seperator
+						    	columns+=$rowSep$colName$seperator$colType$seperator;
 						fi
-					 
-						if [[ "$counter" == "$col" ]]; then
-							temp=$temp$colName
-						else
-							temp=$temp$colName$seperator
+				 		 
+						if [[ $counter == $col ]]
+						 	then
+								temp=$temp$colName
+						 	else
+								temp=$temp$colName$seperator
 						fi
 					
 						((counter++))
 					else
-						echo "Syntax error: Column name contains an illegal character, you should enter string only"
-						echo " "
-						tableMenu
+						echo "Syntax error, it contains an illegal character"
+					     	echo " "
+					 	tableMenu
 					fi
-		    	done
-
-				touch "$TableName"
+		    		done
+				touch $TableName
 				#meta-data
 				touch ".$TableName"
-				echo -e "Table name: $TableName" >> ".$TableName"
-				echo -e "No of columns: $col" >> ".$TableName"
-				echo -e "$columns" >> ".$TableName"
-				echo -e "$temp" >> "$TableName"
-				echo "New Table $TableName created successfully";		 
+				echo -e "Table name: "$TableName >>.$TableName	
+				echo -e "No of columns: "$col >>.$TableName
+				echo -e $columns  >> .$TableName	
+				echo -e $temp >> $TableName
+				echo "Table $TableName created successfully";		 
     				echo " "
  				tableMenu
 			else
-				echo "Syntax error: Invalid input for the number of columns, it should be a number"
+				echo "Syntax error, it contains an illegal character"
 			     	echo " "
 			 	tableMenu
 			fi
-		fi
-	else
-		echo "Syntax error: Table name cannot contain spaces"
-		echo " "
-		tableMenu
+	
+	
 	fi
+	        else
+                echo "Syntax error, not valid input";
+                echo " "
+                tableMenu
+        fi    
 }
-
 
 function dropTable {
 	read -p "Table name: " TableName
@@ -408,103 +411,112 @@ function deleteFromTable {
 }
 
 function updateTable {
-    read -p "Table name: " TableName 
-    
-    if [ ! -f "$TableName" ]; then
-        echo "Table '$TableName' does not exist";
-        echo " "
-        tableMenu
-    fi
+	read -p "Table name: " TableName 
+	read -p "Row ID Value: " idval
+	read -p "Column name: " colName
+	
+	if validate $TableName && validate $idval && validate $colName;
+	then        
+		if [ -f $TableName ]
+		then
+			while [[ true ]]
+			do
+				if numType $idval;
+				then
+					break;
+				else 
+					echo "Syntax error, invalid input type";
+					read -p "id number: " idval;
+				fi
+			done
+			while [[ true ]]
+			do
+				if varType $colName;
+				then
+					break;
+				else 
+					echo "Syntax error, invalid input type";
+					read -p "Column name: " colName;
+				fi
+			done
 
-    read -p "Row ID Value: " idval
-    
-    if validate "$idval"; then        
-        while [[ true ]]; do
-            if numType "$idval"; then
-                break;
-            else 
-                echo "Syntax error, invalid input type";
-                read -p "ID number: " idval;
-            fi
-        done
 
-        read -p "Column name: " colName
+			ColNum=`awk -F":" '{for(i=1;i<=NF;i++){if( $i == "'$colName'" )print i}}' $TableName`
+			
+			Val=`awk -F":" '$1=='$idval' {print $'$ColNum'}' $TableName 2>/dev/null`
+			echo $Val
+			if [[ $? == 0 ]]
+			then
+				if [[ $Val == "" ]]; 
+				then 
+					echo "There is no data to update";
+					echo " "
+					tableMenu
+				fi	
+				colRow=`awk -F: '{if ($1=="'$colName'") print NR}' .$TableName`
 
-        if ! [[ "$colName" =~ [[:space:]] ]]; then
-            ColNum=$(awk -F ":" -v col="$colName" 'NR==1{for(i=1;i<=NF;i++) if($i==col) {print i; exit}}' "$TableName")
-            
-            Val=$(awk -F ":" -v id="$idval" -v col="$ColNum" '$1==id {print $col}' "$TableName" 2>/dev/null)
-            
-            if [[ $? == 0 ]]; then
-                if [[ -z "$Val" ]]; then 
-                    echo "No data found to update";
-                    echo " "
-                    tableMenu
-                fi    
+				colKey=`awk -F":" '{if(NR=='$colRow') print $3}' .$TableName`
 
-                colRow=$(awk -F ":" -v col="$colName" 'NR==1{for(i=1;i<=NF;i++) if($i==col) {print NR; exit}}' ".$TableName")
-                colKey=$(awk -F ":" -v colRow="$colRow" 'NR==colRow{print $3}' ".$TableName")
-                
-                if [[ "$colKey" == "PK" ]]; then
-                    echo "Cannot update Primary Key Field"
-                    echo " "
-                    tableMenu
-                fi
-                
-                coltype=$(awk -F ":" -v colRow="$colRow" 'NR==colRow{print $2}' ".$TableName")
-                read -p "New value: " newValue;
-                
-                case $coltype in
-                    "Number")
-                      while  [[ true ]]; do
-                        if numType "$newValue"; then
-                            break;
-                        else
-                            echo "Syntax error, invalid input type";
-                            read -p "New value instead of '$Val': " newValue;
-                        fi                        
-                    done
-                    ;;
-                    
-                    "Varchar2")
-        
-                      while  [[ true ]]; do
-                        if varType "$newValue"; then
-                            break;
-                        else
-                            echo "Syntax error, invalid input type";
-                            read -p "New value instead of '$Val': " newValue;
-                        fi                        
-                    done
-                    ;;
-                esac
-                
-                # Update only the specified column value in the row
-                awk -v id="$idval" -v col="$ColNum" -v val="$newValue" -F ":" 'BEGIN{OFS=":"} {if($1==id) $col=val; print}' "$TableName" > "$TableName.tmp" && mv "$TableName.tmp" "$TableName"
-                
-                echo "Column '$colName' in row '$idval' updated successfully from '$Val' to '$newValue'"         
+				if [[ $colKey == 'PK' ]]
+				then
+					echo "Cannot update Primary Key Field"
+					echo " "
+					tableMenu
+				fi
+				coltype=`awk -F":" '{if(NR=='$colRow') print $2}' .$TableName`
+				echo $coltype
+				read -p "New value: " newValue;
+				
+				case $coltype in
+					"Number")
+					  while  [[ true ]]					
+					do
+						if numType $newValue;
+						then break;
+						else
+							
+							echo "Syntax error, invalid input type";
+							read -p "New value instead of['$Val']: " newValue;
+						fi						
+					done
+					;;
+					
+					"Varchar2")
+		
+					  while  [[ true ]]					
+					do
+						if varType $newValue;
+						then break;
+						else
+							echo "Syntax error, invalid input type";
+							read -p "New value instead of['$Val']: " newValue;
+						fi						
+					done
+					;;
+					
+					esac
+								
+				
+				sed -i -r 's/'$Val'/'$newValue'/g' $TableName
+				echo "Row updated successfully from $Val to $newValue"	 		
+				echo " "
+				tableMenu
+			else
+				echo "Something wrong, try again";
+				echo " "
+				tableMenu
+			fi
+		else
+			echo "Table doesn't exist";
+			echo " "
+			tableMenu ;
+	  	fi
+	else
+                echo "Syntax error, not valid input";
                 echo " "
                 tableMenu
-            else
-                echo "Something wrong, try again";
-                echo " "
-                tableMenu
-            fi
-        else
-            echo "Debug: Column name contains space"
-            echo "Syntax error, not valid input or column name contains space";
-            echo " "
-            tableMenu
-        fi
-    else
-        echo "Debug: ID validation failed. ID: '$idval'"
-        echo "Syntax error, not valid input or ID contains space"
-        echo " "
-        tableMenu
-    fi   
+        fi   
 }
-
-
 
 ## 3rd-Menu
 function selectMenu {
